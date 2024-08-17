@@ -6,9 +6,9 @@ from torch import optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from trainer.triplet_loss_train import train, test
-from utils import restore_model, restore_objects, save_model, save_objects
-from data_proc import FBanksTripletDataset
-from models import FBankTripletLossNet
+from utils.pt_util import restore_model, restore_objects, save_model, save_objects
+from data_proc.triplet_loss_dataset import FBanksTripletDataset
+from models.triplet_loss_model import FBankTripletLossNet
 import argparse
 
 
