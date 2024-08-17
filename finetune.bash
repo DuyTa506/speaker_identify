@@ -1,6 +1,6 @@
 LR=0.0005
 EPOCHS=20
-BATCH_SIZE=32
+BATCH_SIZE=128
 OUTPUT_MODEL_PATH="siamese_fbanks_saved/"
 TRAIN_DATA="fbanks_train"
 TEST_DATA="fbanks_test"
