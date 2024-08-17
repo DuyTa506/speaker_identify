@@ -3,7 +3,7 @@ from abc import abstractmethod
 
 import torch
 from torch import nn
-from cross_entropy_model import FBankNetV2
+from .cross_entropy_model import FBankNetV2
 
 class TripletLoss(nn.Module):
 
