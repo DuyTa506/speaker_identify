@@ -14,7 +14,7 @@ import argparse
 
 def main(num_layers, lr, epochs, batch_size, pretrained_model_path, output_model_path, train_data, test_data):
     use_cuda = True
-    device = torch.device("cuda" if use_cuda else "cpu")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     print('Using device:', device)
 
     import multiprocessing
