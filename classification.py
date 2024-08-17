@@ -51,7 +51,7 @@ async def train_csf(
     else:
         model = None
         return {"model not exist in lab"}
-    model_path = f'./modelDir/{labId}/log_train/{model_name}/'
+    model_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}'
     model = restore_model(model, model_path)
     last_epoch, max_accuracy, train_losses, test_losses, train_accuracies, test_accuracies = restore_objects(
         model_path, (0, 0, [], [], [], []))

@@ -33,7 +33,7 @@ def main(base_path, output_path, test_size):
         index_target_dir = assert_out_dir_exists(output_path, speaker_id)
 
         sample_counter = 0
-        files_ = list(speaker_dir.glob('**/*.flac'))
+        files_ = list(speaker_dir.glob('**/*.wav'))
 
         for f in files_:
             fbanks = get_fbanks(str(f))
