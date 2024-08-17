@@ -15,7 +15,7 @@ from trainer.cross_entropy_train import train, test
 def main(args):
     model_path = 'saved_models_cross_entropy/{args.num_layers}/'
     use_cuda = True
-    device = torch.device("cuda" if use_cuda else "cpu")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     print('using device', device)
 
     import multiprocessing
