@@ -10,7 +10,7 @@ def check_test_size(value):
     
     if not 0 < float(value) < 0.31:
         raise argparse.ArgumentTypeError("Test size must be a float between 0 and 0.3 .")
-    return value
+    return float(value)
 
 def assert_out_dir_exists(output_path, index):
     dir_ = os.path.join(output_path, str(index))
@@ -26,14 +26,14 @@ def assert_out_dir_exists(output_path, index):
 def main(base_path, output_path, test_size):
     speaker_dirs = [f for f in Path(base_path).iterdir() if f.is_dir()]
 
-    for speaker_dir in speaker_dirs:
+    for id , speaker_dir in enumerate(speaker_dirs):
         speaker_id = speaker_dir.name
         print(f'Processing speaker ID: {speaker_id}')
 
-        index_target_dir = assert_out_dir_exists(output_path, speaker_id)
+        index_target_dir = assert_out_dir_exists(output_path, id)
 
         sample_counter = 0
-        files_ = list(speaker_dir.glob('**/*.wav'))
+        files_ = list(speaker_dir.glob('**/*.flac'))
 
         for f in files_:
             fbanks = get_fbanks(str(f))
