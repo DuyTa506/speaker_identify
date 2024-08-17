@@ -13,7 +13,7 @@ from trainer.cross_entropy_train import train, test
 
 
 def main(args):
-    model_path = 'saved_models_cross_entropy/'
+    model_path = 'saved_models_cross_entropy/{args.num_layers}/'
     use_cuda = True
     device = torch.device("cuda" if use_cuda else "cpu")
     print('using device', device)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_folder', type=str, default='fbanks_train', help='Training dataset folder')
     parser.add_argument('--test_folder', type=str, default='fbanks_test', help='Testing dataset folder')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size for training')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
     parser.add_argument('--lr', type=float, default=0.0005, help='Learning rate for the optimizer')
 
     args = parser.parse_args()
