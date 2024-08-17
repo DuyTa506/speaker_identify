@@ -7,7 +7,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 
 from data_proc.cross_entropy_dataset import FBanksCrossEntropyDataset
-from models.classifier import FBankCrossEntropyNetV2
+from models.cross_entropy_model import FBankCrossEntropyNetV2
 from utils.pt_util import restore_objects, save_model, save_objects, restore_model
 from trainer.cross_entropy_train import train, test
 
