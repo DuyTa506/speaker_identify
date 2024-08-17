@@ -12,7 +12,7 @@ do
   
   echo "Running training with num_layers=${NUM_LAYERS}, pretrained_model_path=${PRETRAINED_MODEL_PATH}"
 
-  python your_script.py \
+  python stage2_finetune.py \
     --num_layers ${NUM_LAYERS} \
     --lr ${LR} \
     --epochs ${EPOCHS} \
