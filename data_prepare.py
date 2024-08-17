@@ -67,9 +67,9 @@ def main(base_path, output_path, test_size):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Extract filter banks from audio files.")
-    parser.add_argument('input', type=str, help='Input folder containing the audio files.')
-    parser.add_argument('out', type=str, help='Output folder to save the extracted features.')
-    parser.add_argument('test_size', type=check_test_size, help='Test size.')
+    parser.add_argument('input', default = "./LibriSpeech/train-clean-100", type=str, help='Input folder containing the audio files.')
+    parser.add_argument('out', default = "./fbannks", type=str, help='Output folder to save the extracted features.')
+    parser.add_argument('test_size', default =0.05, type=check_test_size, help='Test size.')
     args = parser.parse_args()
 
     main(args.input, args.out, args.test_size)
