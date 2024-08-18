@@ -13,7 +13,7 @@ from trainer.cross_entropy_train import train, test
 
 
 def main(args):
-    model_path = 'saved_models_cross_entropy/{args.num_layers}/'
+    model_path = f"saved_models_cross_entropy/{args.num_layers}/"
     use_cuda = True
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print('using device', device)
