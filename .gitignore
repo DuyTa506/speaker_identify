@@ -1,3 +1,6 @@
 __pycache__/
 modelDir/
 dataset-speaker-csf/
+*.m4a
+*.wav
+weights/

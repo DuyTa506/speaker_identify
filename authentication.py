@@ -1,3 +1,4 @@
+import glob
 from predictions import get_embeddings, get_cosine_distance
 from utils.pt_util import restore_objects, save_model, save_objects, restore_model
 from utils.preprocessing import extract_fbanks
@@ -16,8 +17,8 @@ async def train_auth(
     train_dataset_path: str = 'dataset-speaker-csf/fbanks-train',
     test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
     model_name: str = 'fbanks-net-auth',
-    model_layers : int = 4,
-    epochs: int = 2,
+    model_layers : int = 2,
+    epochs: int = 3,
     lr: float = 0.0005,
     batch_size: int = 16,
     labId: str = '',
@@ -41,9 +42,13 @@ async def train_auth(
     else:
         model = None
         return {"model not exist in lab"}
-
+    pretrain_path = f"./weights/{model_layers}/"
     model_path = f'./modelDir/{labId}/log_train/{model_name}/{model_layers}/'
-    model = restore_model(model, model_path)
+    chk_file = glob.glob(model_path + '*.pth')
+    if chk_file:    
+        model = restore_model(model, model_path, device)
+    else:
+        model = restore_model(model, pretrain_path, device)
     last_epoch, max_accuracy, train_losses, test_losses, train_accuracies, test_accuracies = restore_objects(
         model_path, (0, 0, [], [], [], []))
     start = last_epoch + 1 if max_accuracy > 0 else 0
@@ -63,8 +68,8 @@ async def train_auth(
         test_accuracies.append(test_accuracy)
         if test_accuracy > max_accuracy:
             max_accuracy = test_accuracy
-            model_path = save_model(model, epoch, model_path)
-            models_path.append(model_path)
+            saved_path = save_model(model, epoch, model_path)
+            models_path.append(saved_path)
             save_objects((epoch, max_accuracy, train_losses, test_losses,
                          train_accuracies, test_accuracies), epoch, model_path)
             print('saved epoch: {} as checkpoint'.format(epoch))
@@ -83,7 +88,7 @@ async def train_auth(
 async def test_auth(
         test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
         model_name: str = 'fbanks-net-auth',
-        model_layers : int = 4,
+        model_layers : int = 2,
         batch_size: int = 2,
         labId: str = '',
 ):
@@ -99,6 +104,8 @@ async def test_auth(
         return 'path dataset test is not exist'
 
     model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{model_layers}/'
+    if not os.path.exists(model_folder_path):
+        return {"Model not exist in lab"}
     for file in os.listdir(model_folder_path):
         if file.endswith(".pth"):           
             model_path = os.path.join(model_folder_path, file)
@@ -127,11 +134,11 @@ async def test_auth(
 
 
 async def infer_auth(
-        speech_file_path: str = 'sample.wav',
+        speech_file_path: str = 'sample.m4a',
         model_name: str = 'fbanks-net-auth',
-        model_layers : int = 4,
-        name_speaker: str = 'Hưng Phạm',
-        threshold: float = 0.1,
+        model_layers : int = 2,
+        name_speaker: str = 'DuyTa',
+        threshold: float = 0.8,
         labId: str = '',
 ):
     speaker_path = f'./modelDir/{labId}/speaker/'
@@ -144,7 +151,8 @@ async def infer_auth(
         if file.endswith(".pth"):           
             model_path = os.path.join(model_folder_path, file)
     if model_name == 'fbanks-net-auth':
-        try:
+        try:    
+                device = torch.device("cuda")
                 model = FBankCrossEntropyNetV2(num_layers=model_layers, reduction= "mean")
                 cpkt = torch.load(model_path)
                 model.load_state_dict(cpkt)
@@ -153,7 +161,7 @@ async def infer_auth(
                 print('cuda load is error')
                 device = torch.device("cpu")
                 model = FBankCrossEntropyNetV2(num_layers=model_layers,reduction= "mean")
-                cpkt = torch.load(model_path)
+                cpkt = torch.load(model_path, map_location=device)
                 model.load_state_dict(cpkt)
                 model.to(device)
     else:
@@ -161,13 +169,15 @@ async def infer_auth(
         return {"model not exist in lab"}
     
     fbanks = extract_fbanks(speech_file_path)
-    embeddings = get_embeddings(fbanks, model)
-    stored_embeddings = np.load(
-        speaker_path + name_speaker + '/embeddings.npy')
-    stored_embeddings = stored_embeddings.reshape((1, -1))
-    distances = get_cosine_distance(embeddings, stored_embeddings)
+    obj_embeddings = get_embeddings(fbanks, model)
+
+    stored_embedding = np.mean(get_embeddings(np.load(
+        speaker_path + name_speaker + '/fbanks.npy'), model),axis=0).reshape(1,-1)
+    
+    distances = get_cosine_distance(obj_embeddings, stored_embedding)
+
     print('mean distances', np.mean(distances), flush=True)
-    positives = distances < threshold
+    positives = distances < 0.45
     positives_mean = np.mean(positives)
     if positives_mean >= threshold:
         return {
@@ -183,5 +193,5 @@ async def infer_auth(
         }
 
 if __name__ == '__main__':
-    result = train_auth()
+    result = infer_auth()
     print(result)

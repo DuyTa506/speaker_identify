@@ -1,13 +1,12 @@
 import torch
-from models import FBankCrossEntropyNet
+from models import FBankCrossEntropyNetV2
 import tqdm
 import multiprocessing
 import time
 import numpy as np
 from models import DynamicLinearClassifier
-MODEL_PATH = './weights/triplet_loss_trained_model.pth'
-model_instance = FBankCrossEntropyNet()
-model_instance.load_state_dict(torch.load(MODEL_PATH, map_location=lambda storage, loc: storage))
+from utils.pt_util import restore_model
+
 
 use_cuda = False
 kwargs = {'num_workers': multiprocessing.cpu_count(),
@@ -15,7 +14,10 @@ kwargs = {'num_workers': multiprocessing.cpu_count(),
 
 
 def train_classification(model, device, train_loader, optimizer, epoch, log_interval):
-    model.train()
+    pretrain = int(model.num_layers)
+    MODEL_PATH = f'./weights/{pretrain}/'
+    model_instance = FBankCrossEntropyNetV2(num_layers= pretrain)
+    model_instance = restore_model(model_instance, MODEL_PATH, device)
     losses = []
     accuracy = 0
     for batch_idx, (x, y) in enumerate(tqdm.tqdm(train_loader)):
@@ -49,7 +51,10 @@ def train_classification(model, device, train_loader, optimizer, epoch, log_inte
 def test_classification(model, device, test_loader, log_interval=None):
     model.eval()
     losses = []
-
+    pretrain = int(model.num_layers)
+    MODEL_PATH = f'./weights/{pretrain}/'
+    model_instance = FBankCrossEntropyNetV2(num_layers= pretrain)
+    model_instance = restore_model(model_instance, MODEL_PATH, device)
     accuracy = 0
     with torch.no_grad():
         for batch_idx, (x, y) in enumerate(tqdm.tqdm(test_loader)):
@@ -97,13 +102,16 @@ def inference_speaker_classification(
         file_speaker,
         num_class=3,
         num_layers= 2,
-        model_instance=model_instance,
         model_path='saved_models_cross_entropy_classification/0.pth'
         ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     from utils.preprocessing import extract_fbanks
     fbanks = extract_fbanks(file_speaker)
     model = DynamicLinearClassifier(num_layers =num_layers ,output_size=num_class)
+    MODEL_PATH = f'./weights/{num_layers}/'
+    model_instance = FBankCrossEntropyNetV2(num_layers= num_layers)
+    model_instance = restore_model(model_instance, MODEL_PATH, device)
+    
     cpkt = torch.load(model_path)
     model.load_state_dict(cpkt)
     model = model.double()

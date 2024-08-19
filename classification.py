@@ -14,7 +14,7 @@ async def train_csf(
     test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
     model_name: str = 'fbanks-net-classification',
     num_layers : int = 2 ,
-    epoch: int = 2,
+    epoch: int = 3,
     lr: float = 0.0005,
     batch_size: int = 2,
     labId: str = '',
@@ -35,7 +35,7 @@ async def train_csf(
 
     try:
 
-        assert train_dataset.num_classes == test_dataset.num_classes
+        assert  train_dataset.num_classes == test_dataset.num_classes
 
     except:
         return "The number of speakers in test and training sets must be equal "
@@ -51,8 +51,8 @@ async def train_csf(
     else:
         model = None
         return {"model not exist in lab"}
-    model_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}'
-    model = restore_model(model, model_path)
+    model_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}/'
+    model = restore_model(model, model_path, device)
     last_epoch, max_accuracy, train_losses, test_losses, train_accuracies, test_accuracies = restore_objects(
         model_path, (0, 0, [], [], [], []))
     start = last_epoch + 1 if max_accuracy > 0 else 0
@@ -73,8 +73,8 @@ async def train_csf(
         test_accuracies.append(test_accuracy)
         if test_accuracy > max_accuracy:
             max_accuracy = test_accuracy
-            model_path = save_model(model, epoch, model_path)
-            models_path.append(model_path)
+            save_path = save_model(model, epoch, model_path)
+            models_path.append(save_path)
             save_objects((epoch, max_accuracy, train_losses, test_losses,
                          train_accuracies, test_accuracies), epoch, model_path)
             print('saved epoch: {} as checkpoint'.format(epoch))
@@ -93,7 +93,7 @@ async def train_csf(
 async def test_csf(
     test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
     model_name: str = 'fbanks-net-classification',
-    num_layers : int = 2,
+    num_layers : int = 6,
     batch_size: int = 2,
     labId: str = '',
 ):
@@ -107,7 +107,11 @@ async def test_csf(
             test_dataset, batch_size=batch_size, shuffle=True, **kwargs)
     except:
         return 'path dataset test is not exist'
+    
+    
     model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}/'
+    if not os.path.exists(model_folder_path):
+        return {"Model not exist in lab"}
     for file in os.listdir(model_folder_path):
         if file.endswith(".pth"):
             model_path = os.path.join(model_folder_path, file)
@@ -128,22 +132,22 @@ async def test_csf(
         model = None
         return {"model not exist in lab"}
     test_loss, accurancy_mean = test_classification(model, device, test_loader)
-    print(accurancy_mean)
     return {
         'test_loss': test_loss,
         'test_accuracy': accurancy_mean
     }
 
 
-def infer_csf(
-    speech_file_path: str = './sample.wav',
+async def infer_csf(
+    speech_file_path: str = './sample.m4a',
     model_name: str = 'fbanks-net-classification',
     num_layers : int = 2,
     
     labId: str = '',
 ):
-    model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/'
+    model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}/'
     for file in os.listdir(model_folder_path):
+
         if file.endswith(".pth"):
             model_path = os.path.join(model_folder_path, file)
     rs = inference_speaker_classification(

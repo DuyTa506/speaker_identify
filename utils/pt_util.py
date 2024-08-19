@@ -36,13 +36,13 @@ def save_objects(obj, epoch, out_path):
     print('objects saved for epoch: {}'.format(epoch))
 
 
-def restore_model(model, out_path):
+def restore_model(model, out_path,device):
     chk_file = glob.glob(out_path + '*.pth')
 
     if chk_file:
         chk_file = str(chk_file[0])
         print('found modeL {}, restoring'.format(chk_file))
-        model.load_state_dict(torch.load(chk_file))
+        model.load_state_dict(torch.load(chk_file, map_location= device))
     else:
         print('Model not found, using untrained model')
     return model

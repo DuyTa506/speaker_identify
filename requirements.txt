@@ -1,15 +1,10 @@
 torch
 torchvision
+torchaudio
 #libsndfile1
 python-speech-features
 librosa
-python-speech-features==0.6
 faiss-cpu
 tqdm
-
-fastapi==0.85.0
-fastapi-socketio==0.0.9
-aiohttp==3.8.3
 argparse
-uvicorn==0.18.3
-python-socketio==5.0.4
+glob

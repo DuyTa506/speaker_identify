@@ -1,4 +1,18 @@
+
+import time
 import os
+import numpy as np
+import torch
+import tqdm
+from torch import optim
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from trainer.triplet_loss_train import train, test
+from utils.pt_util import restore_model, restore_objects, save_model, save_objects
+from data_proc.triplet_loss_dataset import FBanksTripletDataset
+from models.triplet_loss_model import FBankTripletLossNet
+import argparse
+
 
 def main(num_layers, lr, epochs, batch_size, pretrained_model_path, output_model_path, train_data, test_data):
     use_cuda = True
@@ -10,7 +24,7 @@ def main(num_layers, lr, epochs, batch_size, pretrained_model_path, output_model
 
     kwargs = {'num_workers': multiprocessing.cpu_count(),
               'pin_memory': True} if use_cuda else {}
-
+    print(f'Model and trace will be saved to {output_model_path}')
     train_dataset = FBanksTripletDataset(train_data)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **kwargs)
 
@@ -19,18 +33,11 @@ def main(num_layers, lr, epochs, batch_size, pretrained_model_path, output_model
 
     model = FBankTripletLossNet(num_layers=num_layers, margin=0.2).to(device)
     model = restore_model(model, pretrained_model_path)
-    last_epoch, max_accuracy, train_losses, test_losses, train_positive_accuracies, train_negative_accuracies, \
-    test_positive_accuracies, test_negative_accuracies = restore_objects(pretrained_model_path, (0, 0, [], [], [], [], [], []))
+    last_epoch, max_accuracy, train_losses, test_losses, train_positive_accuracies, train_negative_accuracies, test_positive_accuracies, test_negative_accuracies = restore_objects(output_model_path, (0, 0, [], [], [], [], [], []))
 
     start = last_epoch + 1 if max_accuracy > 0 else 0
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
-
-    # Modify the output path to include the number of layers
-    output_model_path = os.path.join(output_model_path, str(num_layers))
-
-    # Create the directory if it doesn't exist
-    os.makedirs(output_model_path, exist_ok=True)
 
     for epoch in range(start, start + epochs):
         train_loss, train_positive_accuracy, train_negative_accuracy = train(model, device, train_loader, optimizer,
@@ -58,7 +65,8 @@ def main(num_layers, lr, epochs, batch_size, pretrained_model_path, output_model
             save_objects((epoch, max_accuracy, train_losses, test_losses, train_positive_accuracies,
                           train_negative_accuracies, test_positive_accuracies, test_negative_accuracies),
                          epoch, output_model_path)
-            print('Saved epoch: {} as checkpoint'.format(epoch))
+            print(f"Saved epoch: {epoch} as checkpoint to {output_model_path}")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train FBankTripletLossNet model.')
@@ -76,3 +84,4 @@ if __name__ == '__main__':
 
     main(args.num_layers, args.lr, args.epochs, args.batch_size, args.pretrained_model_path, 
          args.output_model_path, args.train_data, args.test_data)
+

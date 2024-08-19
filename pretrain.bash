@@ -1,9 +1,9 @@
 #!/bin/bash
 
-TRAIN_FOLDER="fbanks_train"
-TEST_FOLDER="fbanks_test"
+TRAIN_FOLDER="fbannks_train"
+TEST_FOLDER="fbannks_test"
 EPOCHS=20
-BATCH_SIZE=128
+BATCH_SIZE=2048
 LR=0.0005
 
 for num_layers in 2 3 4 5 6

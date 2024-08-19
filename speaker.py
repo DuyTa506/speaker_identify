@@ -5,7 +5,7 @@ from utils.preprocessing import extract_fbanks
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
  
-def load_data_speaker(labId):
+async def load_data_speaker(labId):
     speaker_path =f'./modelDir/{labId}/speaker/'
     if os.path.exists(speaker_path):
         data_dict = {}
@@ -35,20 +35,30 @@ async def show_all_speaker(labId):
     return {
         "result": list_user
     }
-
 async def add_more_speaker(speech_file_path, speaker_name, labId):
     speaker_path =f'./modelDir/{labId}/speaker/'
+    print(speaker_path)
     dir_ = speaker_path + speaker_name
     if not os.path.exists(dir_):
         os.makedirs(dir_)
 
     fbanks = extract_fbanks(speech_file_path)
-    embeddings = get_embeddings(fbanks)
-    print('shape of embeddings: {}'.format(embeddings.shape), flush=True)
-    mean_embeddings = np.mean(embeddings, axis=0)
-    np.save(speaker_path+speaker_name+'/embeddings.npy',mean_embeddings)
+    # embeddings = get_embeddings(fbanks)
+    # print('shape of embeddings: {}'.format(embeddings.shape), flush=True)
+    # mean_embeddings = np.mean(embeddings, axis=0)
+    # np.save(speaker_path+speaker_name+'/embeddings.npy',mean_embeddings)
+    np.save(speaker_path + speaker_name + "/fbanks.npy", fbanks)
     list_user=os.listdir(speaker_path)
     return {
         "result": list_user
     }
+
+
+if __name__ == '__main__':
+    speaker_list = load_data_speaker("")
+    print(speaker_list)
+    result=add_more_speaker("modelDir/speaker/DuyTa/sample.wav", "DuyTa", "")
+    print(result)
+
+
 
