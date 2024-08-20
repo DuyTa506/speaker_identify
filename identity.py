@@ -16,13 +16,13 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 async def train_id(
-    train_dataset_path: str = 'dataset-speaker-csf/fbanks-train',
-    test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
+    train_dataset_path: str = 'speaker_id\\dataset-speaker-auth\\fbanks_train',
+    test_dataset_path: str = 'speaker_id\\dataset-speaker-auth\\fbanks_test',
     model_name: str = 'fbanks-net-identity',
-    model_layers : int = 2,
-    epoch: int = 1,
-    lr: float = 0.0005,
-    batch_size: int = 16,
+    model_layers : int = 3,
+    epoch: int = 10,
+    lr: float = 0.0003,
+    batch_size: int = 32,
     labId: str = '',
 ):
 
@@ -139,10 +139,10 @@ async def test_id(
 
 
 async def infer_id(
-    speech_file_path: str = './sample.m4a',
+    speech_file_path: str = 'speaker_id\\dataset-speaker-id\\samples\\15\\VIVOSDEV16_048.wav',
     model_name :str = "fbanks-net-identity",
-    model_layers : int = 2,
-    num_speaker: int = 2,
+    model_layers : int = 3,
+    num_speaker: int = 3,
     labId: str = '',
 ):  
     model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{model_layers}'
@@ -168,21 +168,27 @@ async def infer_id(
     
     fbanks = extract_fbanks(speech_file_path)
     embeddings = get_embeddings(fbanks, model)
+    print(embeddings.shape)
     mean_embeddings = np.mean(embeddings, axis=0)
-    mean_embeddings = mean_embeddings.reshape((1, -1))
+    print(mean_embeddings.shape)
+    mean_embeddings = mean_embeddings.reshape((1, -1)).astype(np.float32)
+    print(mean_embeddings.shape)
+    faiss.normalize_L2(mean_embeddings)
     rs = load_data_speaker(labId)
     
     encodes = []
     person_ids = []
     for key, vectors in rs.items():
         for emb, vector in vectors.items():
-            vector =np.mean(get_embeddings(fbanks, model), axis=0).reshape((1,-1))
+            vector =np.mean(get_embeddings(vector, model), axis=0).reshape((1,-1))
+            print(vector)
             encodes.append(np.array(vector, dtype=np.float32))
             person_ids.append(key)
     encodes = np.vstack(encodes).astype(np.float32)
     index = faiss.IndexFlatL2(encodes.shape[1])
+    faiss.normalize_L2(encodes)
     index.add(encodes)
-    distances, indices = index.search(mean_embeddings, num_speaker)
+    distances, indices = index.search(mean_embeddings, k = num_speaker)
     rs_speaker = []
     for i in range(num_speaker):
         # rs_speaker.append(f"speaker {i+1}: {person_ids[indices[0][i]]}, distances: {distances[0][i]}")

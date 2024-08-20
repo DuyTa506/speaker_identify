@@ -14,11 +14,11 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 async def train_auth(
-    train_dataset_path: str = 'dataset-speaker-csf/fbanks-train',
-    test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
+    train_dataset_path: str = 'speaker_id\\dataset-speaker-auth\\fbanks_train',
+    test_dataset_path: str = 'speaker_id\\dataset-speaker-auth\\fbanks_test',
     model_name: str = 'fbanks-net-auth',
-    model_layers : int = 2,
-    epochs: int = 3,
+    model_layers : int = 4,
+    epochs: int = 4,
     lr: float = 0.0005,
     batch_size: int = 16,
     labId: str = '',
@@ -86,7 +86,7 @@ async def train_auth(
 
 
 async def test_auth(
-        test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
+        test_dataset_path: str = 'speaker_id/dataset-speaker-auth/fbanks-test',
         model_name: str = 'fbanks-net-auth',
         model_layers : int = 2,
         batch_size: int = 2,
@@ -134,11 +134,11 @@ async def test_auth(
 
 
 async def infer_auth(
-        speech_file_path: str = 'sample.m4a',
+        speech_file_path: str = 'speaker_id\\dataset-speaker-auth\\samples\\0\\VIVOSDEV01_R002.wav',
         model_name: str = 'fbanks-net-auth',
-        model_layers : int = 2,
-        name_speaker: str = 'DuyTa',
-        threshold: float = 0.8,
+        model_layers : int = 4,
+        name_speaker: str = 'Speaker0',
+        threshold: float = 0.3,
         labId: str = '',
 ):
     speaker_path = f'./modelDir/{labId}/speaker/'
@@ -177,9 +177,9 @@ async def infer_auth(
     distances = get_cosine_distance(obj_embeddings, stored_embedding)
 
     print('mean distances', np.mean(distances), flush=True)
-    positives = distances < 0.45
+    positives = distances < threshold
     positives_mean = np.mean(positives)
-    if positives_mean >= threshold:
+    if positives_mean >= 0.8:
         return {
             "positives_mean": positives_mean,
             "name_speaker": name_speaker,

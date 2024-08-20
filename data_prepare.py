@@ -30,10 +30,10 @@ def main(base_path, output_path, test_size):
         speaker_id = speaker_dir.name
         print(f'Processing speaker ID: {speaker_id}')
 
-        index_target_dir = assert_out_dir_exists(output_path, id)
+        index_target_dir = assert_out_dir_exists(output_path, speaker_id)
 
         sample_counter = 0
-        files_ = list(speaker_dir.glob('**/*.flac'))
+        files_ = list(speaker_dir.glob('**/*.wav'))
 
         for f in files_:
             fbanks = get_fbanks(str(f))
@@ -67,9 +67,9 @@ def main(base_path, output_path, test_size):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Extract filter banks from audio files.")
-    parser.add_argument('input', default = "./LibriSpeech/train-clean-100", type=str, help='Input folder containing the audio files.')
-    parser.add_argument('out', default = "./fbannks", type=str, help='Output folder to save the extracted features.')
-    parser.add_argument('test_size', default =0.05, type=check_test_size, help='Test size.')
+    parser.add_argument('--input', default = "vivos_sample", type=str, help='Input folder containing the audio files.')
+    parser.add_argument('--out', default = "fbanks", type=str, help='Output folder to save the extracted features.')
+    parser.add_argument('--test_size', default =0.1, type=check_test_size, help='Test size.')
     args = parser.parse_args()
 
     main(args.input, args.out, args.test_size)

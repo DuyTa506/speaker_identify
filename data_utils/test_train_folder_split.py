@@ -1,64 +1,62 @@
-"""
-I didn't extract features from the test set of LibriSpeech, the features extracted
-from train-100 was split into train and test set into two separate folders.
-This was again done to read them easily using torch vision's Dataset Folder
-"""
-
 import os
 import shutil
 from pathlib import Path
-
 import numpy as np
 
-
-def assert_out_dir_exists(root, index):
-    dir_ = root + '/' + str(index)
-
+def assert_out_dir_exists(root, label):
+    dir_ = os.path.join(root, label)
+    
     if not os.path.exists(dir_):
         os.makedirs(dir_)
-        print('crated dir {}'.format(dir_))
+        print(f'Created directory {dir_}')
     else:
-        print('dir {} already exists'.format(dir_))
+        print(f'Directory {dir_} already exists')
 
     return dir_
 
-
 def train_test_split(root, test_size=0.05):
-    # make two folders, train and test
-    train_dir = root + '_train'
-    test_dir = root + '_test'
+    # Define paths for train and test directories
+    train_dir = f'{root}_train'
+    test_dir = f'{root}_test'
 
-    os.makedirs(train_dir)
-    os.makedirs(test_dir)
+    # Create train and test directories
+    os.makedirs(train_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
 
+    # Process each label (subdirectory)
     for label in os.listdir(root):
-        files_iter = Path(root + '/' + label).glob('**/*.npy')
+        label_path = os.path.join(root, label)
+        
+        if not os.path.isdir(label_path):
+            continue
+        
+        files_iter = Path(label_path).glob('**/*.npy')
         files_ = [str(f) for f in files_iter]
         files_ = np.array(files_)
 
+        # Create label directories in train and test directories
         assert_out_dir_exists(train_dir, label)
         assert_out_dir_exists(test_dir, label)
 
+        # Shuffle and split the files
         choices = np.random.choice([0, 1], size=files_.shape[0], p=(1 - test_size, test_size))
         train_files = files_[choices == 0]
         test_files = files_[choices == 1]
 
+        # Copy files to the appropriate directories
         for train_sample in train_files:
-            src = train_sample
-            dest = train_dir + '/' + label + '/' + train_sample.split('/')[-1]
-            print('copying file {} to {}'.format(src, dest))
-            shutil.copyfile(train_sample, train_dir + '/' + label + '/' + train_sample.split('/')[-1])
+            dest = os.path.join(train_dir, label, os.path.basename(train_sample))
+            print(f'Copying file {train_sample} to {dest}')
+            shutil.copyfile(train_sample, dest)
 
         for test_sample in test_files:
-            src = test_sample
-            dest = test_dir + '/' + label + '/' + test_sample.split('/')[-1]
-            print('copying file {} to {}'.format(src, dest))
-            shutil.copyfile(test_sample, test_dir + '/' + label + '/' + test_sample.split('/')[-1])
+            dest = os.path.join(test_dir, label, os.path.basename(test_sample))
+            print(f'Copying file {test_sample} to {dest}')
+            shutil.copyfile(test_sample, dest)
 
-        print('done for label: {}'.format(label))
+        print(f'Done for label: {label}')
 
     print('All done')
 
-
 if __name__ == '__main__':
-    train_test_split('fbanks')
+    train_test_split('../fbanks')

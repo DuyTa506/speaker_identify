@@ -4,3 +4,5 @@ dataset-speaker-csf/
 *.m4a
 *.wav
 weights/
+vivos_sample/
+speaker_id/

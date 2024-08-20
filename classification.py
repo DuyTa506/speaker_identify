@@ -8,15 +8,14 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 from models.classifier import DynamicLinearClassifier 
 
-
 async def train_csf(
-    train_dataset_path: str = 'dataset-speaker-csf/fbanks-train',
-    test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
+    train_dataset_path: str = 'speaker_id/dataset-speaker-csf/fbanks_train',
+    test_dataset_path: str = 'speaker_id/dataset-speaker-csf/fbanks_test',
     model_name: str = 'fbanks-net-classification',
-    num_layers : int = 2 ,
-    epoch: int = 3,
-    lr: float = 0.0005,
-    batch_size: int = 2,
+    num_layers : int = 4 ,
+    epoch: int = 10,
+    lr: float = 0.0003,
+    batch_size: int = 20,
     labId: str = '',
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -91,9 +90,9 @@ async def train_csf(
 
 
 async def test_csf(
-    test_dataset_path: str = 'dataset-speaker-csf/fbanks-test',
+    test_dataset_path: str = 'speaker_id/dataset-speaker-csf/fbanks_test',
     model_name: str = 'fbanks-net-classification',
-    num_layers : int = 6,
+    num_layers : int = 4,
     batch_size: int = 2,
     labId: str = '',
 ):
@@ -139,18 +138,18 @@ async def test_csf(
 
 
 async def infer_csf(
-    speech_file_path: str = './sample.m4a',
+    speech_file_path: str = 'speaker_id\\dataset-speaker-csf\\test_sample\\17\\VIVOSDEV18_006.wav',
     model_name: str = 'fbanks-net-classification',
-    num_layers : int = 2,
-    
+    num_layers : int = 4,   
     labId: str = '',
+    num_speaker : int = 3
 ):
     model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{num_layers}/'
     for file in os.listdir(model_folder_path):
 
         if file.endswith(".pth"):
             model_path = os.path.join(model_folder_path, file)
-    rs = inference_speaker_classification(
+    rs = inference_speaker_classification(num_class= num_speaker,
         file_speaker=speech_file_path, model_path=model_path, num_layers = num_layers)
     return {
         "result": rs

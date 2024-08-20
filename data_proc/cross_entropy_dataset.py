@@ -9,7 +9,6 @@ class FBanksCrossEntropyDataset(Dataset):
     def __init__(self, root):
         self.dataset_folder = DatasetFolder(root=root, loader=FBanksCrossEntropyDataset._npy_loader, extensions='.npy')
         self.len_ = len(self.dataset_folder.samples)
-
         bin_counts = np.bincount(self.dataset_folder.targets)
         self.num_classes = len(self.dataset_folder.classes)
         self.label_to_index_range = {}
@@ -46,7 +45,7 @@ if __name__ == '__main__':
     kwargs = {'num_workers': multiprocessing.cpu_count(),
               'pin_memory': True} if use_cuda else {}
 
-    data_test = FBanksCrossEntropyDataset('./dataset-speaker-csf/fbanks-test')
+    data_test = FBanksCrossEntropyDataset('..\\speaker_id\\dataset-speaker-csf\\fbanks_test')
     print(data_test.label_to_index_range)
-    test_loader = DataLoader(data_test, batch_size=1, shuffle=True, **kwargs)
+    test_loader = DataLoader(data_test, batch_size=3, shuffle=True, **kwargs)
     print(next(iter(test_loader))[0].shape)

@@ -114,19 +114,18 @@ def inference_speaker_classification(
     
     cpkt = torch.load(model_path)
     model.load_state_dict(cpkt)
-    model = model.double()
+    model = model
     model.to(device)
-    model_instance = model_instance.double()
+    model_instance = model_instance
     model_instance.eval()
     model_instance.to(device)
     with torch.no_grad():
-        x = torch.from_numpy(fbanks)
+        x = torch.from_numpy(fbanks).float()
         embedings = model_instance(x.to(device))
         # print(embedings.shape)  
         # embedings=embedings.unsqueeze(0)
         output = model(embedings)
-        output = torch.argmax(output,dim=-1) 
-        speaker_pro = speaker_probability(output)
-        print(speaker_pro)
+        output_logits = torch.argmax(output,dim=1)
+        speaker_pro = speaker_probability(output_logits)
     return speaker_pro
 

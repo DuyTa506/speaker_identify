@@ -55,10 +55,8 @@ async def add_more_speaker(speech_file_path, speaker_name, labId):
 
 
 if __name__ == '__main__':
-    speaker_list = load_data_speaker("")
+    speaker_list = show_all_speaker("")
     print(speaker_list)
-    result=add_more_speaker("modelDir/speaker/DuyTa/sample.wav", "DuyTa", "")
-    print(result)
 
 
 
