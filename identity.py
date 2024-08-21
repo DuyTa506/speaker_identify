@@ -1,4 +1,5 @@
 import glob
+from typing import Literal
 from trainer.cross_entropy_train import test, train
 from data_proc.cross_entropy_dataset import FBanksCrossEntropyDataset, DataLoader
 from utils.pt_util import restore_objects, save_model, save_objects, restore_model
@@ -139,10 +140,11 @@ async def test_id(
 
 
 async def infer_id(
-    speech_file_path: str = 'speaker_id\\dataset-speaker-id\\samples\\15\\VIVOSDEV16_048.wav',
+    speech_file_path: str = 'vivos_sample\\15\\VIVOSDEV16_273.wav',
     model_name :str = "fbanks-net-identity",
     model_layers : int = 3,
     num_speaker: int = 3,
+    distance_metric : Literal["l2", "cosine"] = "cosine",
     labId: str = '',
 ):  
     model_folder_path = f'./modelDir/{labId}/log_train/{model_name}/{model_layers}'
@@ -168,33 +170,36 @@ async def infer_id(
     
     fbanks = extract_fbanks(speech_file_path)
     embeddings = get_embeddings(fbanks, model)
-    print(embeddings.shape)
     mean_embeddings = np.mean(embeddings, axis=0)
-    print(mean_embeddings.shape)
     mean_embeddings = mean_embeddings.reshape((1, -1)).astype(np.float32)
-    print(mean_embeddings.shape)
-    faiss.normalize_L2(mean_embeddings)
-    rs = load_data_speaker(labId)
-    
     encodes = []
     person_ids = []
+    ##Embedding and cat the user's embeddings##
+    rs = load_data_speaker(labId)
     for key, vectors in rs.items():
-        for emb, vector in vectors.items():
+        for _, vector in vectors.items():
             vector =np.mean(get_embeddings(vector, model), axis=0).reshape((1,-1))
-            print(vector)
             encodes.append(np.array(vector, dtype=np.float32))
             person_ids.append(key)
     encodes = np.vstack(encodes).astype(np.float32)
-    index = faiss.IndexFlatL2(encodes.shape[1])
-    faiss.normalize_L2(encodes)
+
+    if distance_metric == "l2" :
+        index = faiss.IndexFlatL2(encodes.shape[1]) 
+               
+    elif distance_metric == "cosine" :
+        faiss.normalize_L2(mean_embeddings)
+        faiss.normalize_L2(encodes) 
+        index = faiss.index_factory(encodes.shape[1], "Flat", faiss.METRIC_INNER_PRODUCT)
+    else :
+        return {"Please choose distance stragegy between l2 distance and cosine distance"}
     index.add(encodes)
     distances, indices = index.search(mean_embeddings, k = num_speaker)
-    rs_speaker = []
+    rs_speaker = []    
     for i in range(num_speaker):
         # rs_speaker.append(f"speaker {i+1}: {person_ids[indices[0][i]]}, distances: {distances[0][i]}")
         rs_speaker.append({
             "speaker_name": person_ids[indices[0][i]],
-            "distance": str(distances[0][i])
+            "distance": str( 1- distances[0][i]) if distance_metric == "cosine" else str(distances[0][i])
         })
     return {
         'result': rs_speaker
